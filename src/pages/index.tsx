@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components';
-import { Modal, Button, Icon, Input } from 'semantic-ui-react'
+import { Modal, Button, Icon, Input, Progress, Container } from 'semantic-ui-react'
 import { useTwitter } from '../utils/twitter'
 import Long from 'long'
 import JSZipUtils from 'jszip-utils'
@@ -15,31 +15,47 @@ const _Container = styled.div`
 
 const _Index = styled.div`
   height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 `
 
+const __Text = styled.div`
+  font-size: 16px;
+  margin-bottom: 20px;
+`
+
 const __InputContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
   div:first-child {
-    margin: 20px;
+    margin-right: 20px;
   }
 `
+
+const __Content = styled.div`
+    width: 100%;
+  `
 
 const Index = () => {
   const urls: { name: string; url: string }[] = []
   const twitter = new useTwitter()
   const [userName, setUserName] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [percent, setPercent] = useState(0)
 
   const handleSearchUser = async () => {
+    setIsLoading(true)
+    setPercent(0)
     if (!userName) {
       alert('ユーザー名を入力してください')
       return
     }
     await getAllTimeLines()
     download()
-    console.log(urls)
   }
 
   const getAllTimeLines = async (maxId: string = undefined) => {
@@ -75,11 +91,11 @@ const Index = () => {
     await getAllTimeLines(nextMaxId)
   }
 
-  const download = () => {
+  const download = async () => {
     const zip = new JSZip();
     let count = 0
     for (const url of urls) {
-      JSZipUtils.getBinaryContent(url.url, (err: any, data: any) => {
+      await JSZipUtils.getBinaryContent(url.url, async (err: any, data: any) => {
         if (err) {
           console.log(err);
         }
@@ -89,13 +105,17 @@ const Index = () => {
         fileName = isVideo ? `${url.name}.mp4` : `${url.name}.jpg`
         zip.file(fileName, data, { binary: true });
         count++
+        const percent = count / urls.length * 100
+        setPercent(percent)
         if (count === urls.length) {
-          zip.generateAsync({ type: "blob" }).then(function (blob) {
+          await zip.generateAsync({ type: "blob" }).then(function (blob) {
             saveAs(blob, "download.zip");
+            alert('ファイルの作成が完了しました')
+            setPercent(0)
           }, function (err) {
             console.log(err);
           });
-          }
+        }
         }
       );
     }
@@ -104,11 +124,17 @@ const Index = () => {
   return (
     <_Container>
       <_Index>
-        <div>特定のユーザーのメディアをzip形式で取得します※最新3200ツイート中</div>
+        <__Text>
+          <div>特定のユーザーのメディアをzip形式で取得します</div>
+          <div>※最新3200ツイートの中から取得</div>
+          </__Text>
         <__InputContainer>
           <Input value={userName} onChange={(e)=> setUserName(e.target.value)} className="mr-4" />
           <Button color="blue" onClick={handleSearchUser}>ユーザー検索</Button>
         </__InputContainer>
+        <__Content>
+          <Progress percent={percent} progress success />
+        </__Content>
       </_Index>
     </_Container>
   )
