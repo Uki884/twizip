@@ -104,7 +104,7 @@ const Index = () => {
   return (
     <_Container>
       <_Index>
-        <div>特定のユーザーの最新3200ツイートのメディアをzip形式で取得します</div>
+        <div>特定のユーザーのメディアをzip形式で取得します※最新3200ツイート中</div>
         <__InputContainer>
           <Input value={userName} onChange={(e)=> setUserName(e.target.value)} className="mr-4" />
           <Button color="blue" onClick={handleSearchUser}>ユーザー検索</Button>
