@@ -22,12 +22,12 @@ const _Index = styled.div`
   justify-content: center;
 `
 
-const __Text = styled.div`
+const _Text = styled.div`
   font-size: 16px;
   margin-bottom: 20px;
 `
 
-const __InputContainer = styled.div`
+const _InputContainer = styled.div`
   display: flex;
   align-items: center;
   margin-bottom: 20px;
@@ -36,7 +36,7 @@ const __InputContainer = styled.div`
   }
 `
 
-const __Content = styled.div`
+const _Content = styled.div`
     width: 100%;
   `
 
@@ -45,7 +45,9 @@ const Index = () => {
   const twitter = new useTwitter()
   const [userName, setUserName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const [percent, setPercent] = useState(0)
+  const [tweetProgressPercent, setTweetProgressPercent] = useState(50)
 
   const handleSearchUser = async () => {
     setIsLoading(true)
@@ -92,6 +94,9 @@ const Index = () => {
   }
 
   const download = async () => {
+    setTweetProgressPercent(100)
+    setIsLoading(false)
+    setIsDownloading(true)
     const zip = new JSZip();
     let count = 0
     for (const url of urls) {
@@ -106,12 +111,13 @@ const Index = () => {
         zip.file(fileName, data, { binary: true });
         count++
         const percent = count / urls.length * 100
-        setPercent(percent)
+        setPercent(Math.round(percent))
         if (count === urls.length) {
           await zip.generateAsync({ type: "blob" }).then(function (blob) {
             saveAs(blob, "download.zip");
             alert('ファイルの作成が完了しました')
             setPercent(0)
+            setIsDownloading(false)
           }, function (err) {
             console.log(err);
           });
@@ -124,17 +130,18 @@ const Index = () => {
   return (
     <_Container>
       <_Index>
-        <__Text>
+        <_Text>
           <div>特定のユーザーのメディアをzip形式で取得します</div>
           <div>※最新3200ツイートの中から取得</div>
-          </__Text>
-        <__InputContainer>
+          </_Text>
+        <_InputContainer>
           <Input value={userName} onChange={(e)=> setUserName(e.target.value)} className="mr-4" />
           <Button color="blue" onClick={handleSearchUser}>ユーザー検索</Button>
-        </__InputContainer>
-        <__Content>
-          <Progress percent={percent} progress success />
-        </__Content>
+        </_InputContainer>
+        <_Content>
+          { isLoading && <Progress percent={tweetProgressPercent} progress />}
+          { isDownloading && <Progress percent={percent} progress success />}
+        </_Content>
       </_Index>
     </_Container>
   )
