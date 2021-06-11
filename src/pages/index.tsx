@@ -96,10 +96,21 @@ const Index = () => {
   }
 
   const zipGenerateAsync = (zip: any) => {
-  return new Promise((resolve, reject) => {
-    zip.generateAsync({type: "blob"}).then(resolve);
-  });
-};
+    return new Promise((resolve, reject) => {
+      zip.generateAsync({type: "blob"}).then(resolve);
+    });
+  };
+
+  const getBinaryContent = (url: string, zip: any) => {
+    return new JSZip.external.Promise((resolve, reject) => {
+      JSZipUtils.getBinaryContent(url, (err: any, data: any) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(data);
+      });
+    })
+  }
 
   const download = async () => {
     setTweetProgressPercent(100)
@@ -108,10 +119,7 @@ const Index = () => {
     const zip = new JSZip();
     let count = 0
     for await (const url of urls) {
-      await JSZipUtils.getBinaryContent(url.url, async (err: any, data: any) => {
-        if (err) {
-          console.log(err);
-        }
+      const data = await getBinaryContent(url.url, zip) as any;
         let fileName = ''
         const videoUrl = 'https://video.twimg.com'
         const isVideo = url.url.indexOf(videoUrl) !== -1
@@ -124,13 +132,11 @@ const Index = () => {
           setIsDownloading(false)
           setIsZipping(true)
           const blob = await zipGenerateAsync(zip) as Blob;
-          saveAs(blob, "download.zip");
+          saveAs(blob, `@${userName}.zip`);
           alert('zipの作成が完了しました')
           setPercent(0)
           setIsZipping(false)
         }
-        }
-      );
     }
   }
 
