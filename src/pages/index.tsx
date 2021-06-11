@@ -11,6 +11,7 @@ const _Container = styled.div`
   height: 100vh;
   margin: 0 24px;
   text-align: left;
+  font-size: 16px;
 `
 
 const _Index = styled.div`
@@ -46,16 +47,17 @@ const Index = () => {
   const [userName, setUserName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isZipping, setIsZipping] = useState(false)
   const [percent, setPercent] = useState(0)
   const [tweetProgressPercent, setTweetProgressPercent] = useState(50)
 
   const handleSearchUser = async () => {
-    setIsLoading(true)
-    setPercent(0)
     if (!userName) {
       alert('ユーザー名を入力してください')
       return
     }
+    setIsLoading(true)
+    setPercent(0)
     await getAllTimeLines()
     download()
   }
@@ -93,13 +95,19 @@ const Index = () => {
     await getAllTimeLines(nextMaxId)
   }
 
+  const zipGenerateAsync = (zip: any) => {
+  return new Promise((resolve, reject) => {
+    zip.generateAsync({type: "blob"}).then(resolve);
+  });
+};
+
   const download = async () => {
     setTweetProgressPercent(100)
     setIsLoading(false)
     setIsDownloading(true)
     const zip = new JSZip();
     let count = 0
-    for (const url of urls) {
+    for await (const url of urls) {
       await JSZipUtils.getBinaryContent(url.url, async (err: any, data: any) => {
         if (err) {
           console.log(err);
@@ -113,14 +121,13 @@ const Index = () => {
         const percent = count / urls.length * 100
         setPercent(Math.round(percent))
         if (count === urls.length) {
-          await zip.generateAsync({ type: "blob" }).then(function (blob) {
-            saveAs(blob, "download.zip");
-            alert('ファイルの作成が完了しました')
-            setPercent(0)
-            setIsDownloading(false)
-          }, function (err) {
-            console.log(err);
-          });
+          setIsDownloading(false)
+          setIsZipping(true)
+          const blob = await zipGenerateAsync(zip) as Blob;
+          saveAs(blob, "download.zip");
+          alert('zipの作成が完了しました')
+          setPercent(0)
+          setIsZipping(false)
         }
         }
       );
@@ -131,16 +138,24 @@ const Index = () => {
     <_Container>
       <_Index>
         <_Text>
-          <div>特定のユーザーのメディアをzip形式で取得します</div>
-          <div>※最新3200ツイートの中から取得</div>
+          <div>特定のユーザーのメディアをzip形式で取得します ※最新3200ツイートの中から取得</div>
           </_Text>
         <_InputContainer>
-          <Input value={userName} onChange={(e)=> setUserName(e.target.value)} className="mr-4" />
-          <Button color="blue" onClick={handleSearchUser}>ユーザー検索</Button>
+          <Input value={userName} onChange={(e) => setUserName(e.target.value)} icon='at' iconPosition='left' placeholder='ユーザー名で検索' />
+          <Button color="blue" onClick={handleSearchUser}>検索</Button>
         </_InputContainer>
         <_Content>
-          { isLoading && <Progress percent={tweetProgressPercent} progress />}
-          { isDownloading && <Progress percent={percent} progress success />}
+          {isLoading &&
+            <div>
+              <Progress percent={tweetProgressPercent} progress />
+              ツイート読み込み中...
+            </div>}
+          {isDownloading &&
+            <div>
+            <Progress percent={percent} progress success />
+            ダウンロード中...
+            </div>}
+          { isZipping && <div>zip作成中...</div> }
         </_Content>
       </_Index>
     </_Container>
