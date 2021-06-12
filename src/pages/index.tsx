@@ -4,7 +4,7 @@ import { Modal, Button, Icon, Input, Progress, Container } from 'semantic-ui-rea
 import { useTwitter } from '../utils/twitter'
 import Long from 'long'
 import JSZipUtils from 'jszip-utils'
-import JSZip from 'jszip-immediate'
+import JSZip from 'jszip'
 import { saveAs } from 'file-saver';
 
 const _Container = styled.div`
@@ -84,7 +84,7 @@ const Index = () => {
             const video = media.video_info.variants.filter((item: any) => item.bitrate).sort((a: any, b: any) => b.bitrate - a.bitrate)[0]
             urls.push({ name: `${outputText}_${index + 1}`, url: video.url })
           } else if (media.type === 'photo') {
-            urls.push({ name: `${outputText}_${index + 1}`, url: media.media_url_https })
+            urls.push({ name: `${outputText}_${index + 1}`, url: media.media_url })
           }
         })
       }
