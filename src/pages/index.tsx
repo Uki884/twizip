@@ -118,7 +118,7 @@ const Index = () => {
     setIsDownloading(true)
     const zip = new JSZip();
     let count = 0
-    for await (const url of urls) {
+    const promises = urls.map(async url =>  {
       const data = await getBinaryContent(url.url, zip) as any;
         let fileName = ''
         const videoUrl = 'https://video.twimg.com'
@@ -128,15 +128,16 @@ const Index = () => {
         count++
         const percent = count / urls.length * 100
         setPercent(Math.round(percent))
-        if (count === urls.length) {
-          setIsDownloading(false)
-          setIsZipping(true)
-          const blob = await zipGenerateAsync(zip) as Blob;
-          saveAs(blob, `@${userName}.zip`);
-          alert('zipの作成が完了しました')
-          setPercent(0)
-          setIsZipping(false)
-        }
+    })
+    await Promise.all(promises)
+    if (count === urls.length) {
+      setIsDownloading(false)
+      setIsZipping(true)
+      const blob = await zipGenerateAsync(zip) as Blob;
+      saveAs(blob, `@${userName}.zip`);
+      alert('zipの作成が完了しました')
+      setPercent(0)
+      setIsZipping(false)
     }
   }
 
