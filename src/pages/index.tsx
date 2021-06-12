@@ -4,7 +4,7 @@ import { Modal, Button, Icon, Input, Progress, Container } from 'semantic-ui-rea
 import { useTwitter } from '../utils/twitter'
 import Long from 'long'
 import JSZipUtils from 'jszip-utils'
-import JSZip from 'jszip'
+import JSZip from 'jszip-immediate'
 import { saveAs } from 'file-saver';
 
 const _Container = styled.div`

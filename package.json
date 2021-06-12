@@ -23,6 +23,7 @@
     "eslint-plugin-react": "^7.22.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.6.0",
+    "jszip-immediate": "^3.7.0",
     "jszip-utils": "^0.1.0",
     "long": "^4.0.0",
     "next": "^9.5.3",
