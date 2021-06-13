@@ -102,7 +102,7 @@ const Index = () => {
   };
 
   const getBinaryContent = (url: string, zip: any) => {
-    return new JSZip.external.Promise((resolve, reject) => {
+    return new JSZip.external.Promise((resolve: any, reject: any) => {
       JSZipUtils.getBinaryContent(url, (err: any, data: any) => {
         if (err) {
           reject(err);
