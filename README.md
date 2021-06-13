@@ -1,4 +1,4 @@
-# twiziphttps://github.com/Uki884/twizip
+# twizip
 twitterのメディアをzipで保存できるアプリです。
 
 https://twizip.vercel.app/
