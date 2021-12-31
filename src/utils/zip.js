@@ -74,10 +74,10 @@ function a(e) {
     },
   });
 }
-function r(e: any) {
+function r(e) {
   return "string" == typeof e ? s(e) : e instanceof Uint8Array ? e : n(e);
 }
-function s(e: any) {
+function s(e) {
   return new TextEncoder().encode(String(e));
 }
 const A = new WebAssembly.Instance(
