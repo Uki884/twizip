@@ -63,32 +63,8 @@ const Index = () => {
       method: 'POST',
       body: JSON.stringify(urls.map(url => url.url))
     })
-      .then((response) => response.body.getReader())
-      .then((reader) => {
-      const stream = new ReadableStream({
-        start(controller) {
-          // 次の関数は各データチャンクを処理します
-          function push() {
-            // done は Boolean で、value は Uint8Array です
-            return reader.read().then(({ done, value }) => {
-              // 読み取るデータはもうありませんか？
-              if (done) {
-                // データの送信が完了したことをブラウザーに伝えます
-                controller.close();
-                return;
-              }
-
-              // データを取得し、コントローラー経由でブラウザーに送信します
-              controller.enqueue(value);
-              push();
-            });
-          }
-          push();
-        }
-      });
-        return new Response(stream);
-      })
-    saveAs(await result.blob(), `@${userName}.zip`);
+    const blob = await result.blob()
+    saveAs(blob, `@${userName}.zip`);
   }
 
   const getAllTimeLines = async (maxId: string = undefined) => {
