@@ -5,7 +5,6 @@ import { useTwitter } from '../utils/twitter'
 import Long from 'long'
 import JSZipUtils from 'jszip-utils'
 import JSZip from 'jszip-immediate'
-import { downloadZip } from 'src/utils/zip'
 import { saveAs } from 'file-saver';
 
 const _Container = styled.div`
@@ -60,7 +59,36 @@ const Index = () => {
     setIsLoading(true)
     setPercent(0)
     await getAllTimeLines()
-    download()
+    const result = await fetch('/api/twitter', {
+      method: 'POST',
+      body: JSON.stringify(urls.map(url => url.url))
+    })
+      .then((response) => response.body.getReader())
+      .then((reader) => {
+      const stream = new ReadableStream({
+        start(controller) {
+          // 次の関数は各データチャンクを処理します
+          function push() {
+            // done は Boolean で、value は Uint8Array です
+            return reader.read().then(({ done, value }) => {
+              // 読み取るデータはもうありませんか？
+              if (done) {
+                // データの送信が完了したことをブラウザーに伝えます
+                controller.close();
+                return;
+              }
+
+              // データを取得し、コントローラー経由でブラウザーに送信します
+              controller.enqueue(value);
+              push();
+            });
+          }
+          push();
+        }
+      });
+        return new Response(stream);
+      })
+    saveAs(await result.blob(), `@${userName}.zip`);
   }
 
   const getAllTimeLines = async (maxId: string = undefined) => {
@@ -111,22 +139,6 @@ const Index = () => {
         resolve(data);
       });
     })
-  }
-
-  const download = async () => {
-    setTweetProgressPercent(100)
-    setIsLoading(false)
-    setIsDownloading(true)
-    const requests = urls.map(async url => {
-      return fetch(url.url)
-    }) as any
-    setIsDownloading(false)
-    setIsZipping(true)
-    const blob =  await downloadZip(requests).blob()
-    saveAs(blob, `@${userName}.zip`);
-    alert('zipの作成が完了しました')
-    setPercent(0)
-    setIsZipping(false)
   }
 
   return (

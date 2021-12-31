@@ -7,6 +7,6 @@ export default (req: NextApiRequest, res: NextApiResponse) =>
     target: "https://api.twitter.com",
     // In addition, you can use the `pathRewrite` option provided by `next-http-proxy`
     pathRewrite: {
-      "^/api": "",
+      "^/api/proxy": "",
     },
   });
