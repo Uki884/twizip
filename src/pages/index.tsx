@@ -64,7 +64,11 @@ const Index = () => {
       body: JSON.stringify(urls.map(url => url.url))
     })
     const blob = await result.blob()
-    saveAs(blob, `@${userName}.zip`);
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `@${userName}.zip`;
+    link.click();
+    // saveAs(blob, `@${userName}.zip`);
   }
 
   const getAllTimeLines = async (maxId: string = undefined) => {
