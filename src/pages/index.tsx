@@ -5,6 +5,7 @@ import { useTwitter } from '../utils/twitter'
 import Long from 'long'
 import JSZipUtils from 'jszip-utils'
 import JSZip from 'jszip-immediate'
+import { downloadZip } from 'src/utils/zip'
 import { saveAs } from 'file-saver';
 
 const _Container = styled.div`
@@ -116,29 +117,16 @@ const Index = () => {
     setTweetProgressPercent(100)
     setIsLoading(false)
     setIsDownloading(true)
-    const zip = new JSZip();
-    let count = 0
-    const promises = urls.map(async url =>  {
-      const data = await getBinaryContent(url.url, zip) as any;
-        let fileName = ''
-        const videoUrl = 'https://video.twimg.com'
-        const isVideo = url.url.indexOf(videoUrl) !== -1
-        fileName = isVideo ? `${url.name}.mp4` : `${url.name}.jpg`
-        zip.file(fileName, data, { binary: true });
-        count++
-        const percent = count / urls.length * 100
-        setPercent(Math.round(percent))
-    })
-    await Promise.all(promises)
-    if (count === urls.length) {
-      setIsDownloading(false)
-      setIsZipping(true)
-      const blob = await zipGenerateAsync(zip) as Blob;
-      saveAs(blob, `@${userName}.zip`);
-      alert('zipの作成が完了しました')
-      setPercent(0)
-      setIsZipping(false)
-    }
+    const requests = urls.map(async url => {
+      return fetch(url.url)
+    }) as any
+    setIsDownloading(false)
+    setIsZipping(true)
+    const blob =  await downloadZip(requests).blob()
+    saveAs(blob, `@${userName}.zip`);
+    alert('zipの作成が完了しました')
+    setPercent(0)
+    setIsZipping(false)
   }
 
   return (
