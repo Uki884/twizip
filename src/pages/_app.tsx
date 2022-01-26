@@ -8,9 +8,8 @@ import { RecoilRoot } from 'recoil'
 const MyApp = (props: any): any => {
   const { Component, pageProps } = props;
   useEffect(() => {
-    if("serviceWorker" in navigator) {
-      window.addEventListener("load", function () {
-       navigator.serviceWorker.register("/worker.js").then(
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/worker.js").then(
           function (registration) {
             console.log("Service Worker registration successful with scope: ", registration.scope);
           },
@@ -18,7 +17,6 @@ const MyApp = (props: any): any => {
             console.log("Service Worker registration failed: ", err);
           }
         );
-      });
     }
   }, [])
   return (
