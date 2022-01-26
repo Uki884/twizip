@@ -59,16 +59,14 @@ const Index = () => {
     setIsLoading(true)
     setPercent(0)
     await getAllTimeLines()
+    setTweetProgressPercent(100)
     const result = await fetch('/api/twitter', {
       method: 'POST',
       body: JSON.stringify(urls.map(url => url.url))
     })
     const blob = await result.blob()
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.download = `@${userName}.zip`;
-    link.click();
-    // saveAs(blob, `@${userName}.zip`);
+    setIsLoading(false)
+    saveAs(blob, `@${userName}.zip`);
   }
 
   const getAllTimeLines = async (maxId: string = undefined) => {
