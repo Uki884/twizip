@@ -1,6 +1,7 @@
 import 'semantic-ui-css/semantic.min.css'
 import React, { useEffect } from 'react'
-import App from "next/app";
+import { withTRPC } from '@trpc/next';
+import { AppRouter } from '@/pages/api/trpc/[trpc]';
 import BaseLayout from '@/components/Layouts/BaseLayout'
 
 import { RecoilRoot } from 'recoil'
@@ -28,4 +29,19 @@ const MyApp = (props: any): any => {
   );
 }
 
-export default MyApp;
+export default withTRPC<AppRouter>({
+  config({ ctx }) {
+    const url = process.env.NEXT_PUBLIC_BASE_URL
+      ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/trpc`
+      : 'http://localhost:3000/api/trpc';
+
+    return {
+      url,
+      /**
+       * @link https://react-query.tanstack.com/reference/QueryClient
+       */
+      // queryClientConfig: { defaultOptions: { queries: { staleTime: 60 } } },
+    };
+  },
+  ssr: false,
+})(MyApp);

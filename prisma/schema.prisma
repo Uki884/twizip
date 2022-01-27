@@ -1,0 +1,20 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["interactiveTransactions"]
+}
+
+model Download {
+  id                                 Int                 @id @default(autoincrement())
+  user_name                          String?
+  count                     BigInt              @default(1)
+  created_at                         DateTime            @default(now()) @map(name: "created_at")
+  updated_at                         DateTime            @updatedAt @map(name: "updated_at")
+
+  @@map(name: "download")
+  @@unique(fields: [user_name])
+}

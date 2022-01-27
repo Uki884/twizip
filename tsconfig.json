@@ -13,7 +13,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -27,7 +27,8 @@
     },
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "server/**/*"
   ],
   "exclude": [
     "node_modules"
