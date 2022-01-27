@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components';
 import { Button, Input, Message, Progress } from 'semantic-ui-react'
 import { useTwitter } from '../utils/twitter'
@@ -42,11 +42,20 @@ const _Content = styled.div`
 const Index = () => {
   const createDownload = trpc.useMutation(['downloads.create'])
   const urls: { name: string; url: string }[] = []
+  const [urlCount, setUrlCount] = useState(0)
   const twitter = new useTwitter()
   const [userName, setUserName] = useState('')
   const [progressMessage, setProgressMessage] = useState({ has: false, message: '' })
   const [percent, setPercent] = useState(0)
   const [message, setMessage] = useState<{ has: boolean, text: string; type: 'green' | 'red' }>({ has: false, text: '', type: 'green' })
+
+  useEffect(function () {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener('message', ({ data }) => {
+        setPercent(Math.ceil(data.num / data.all * 100))
+      });
+    }
+  }, [])
 
   const handleDismiss = () => {
     setMessage({ has: false, text: '', type: 'green' })
@@ -62,7 +71,9 @@ const Index = () => {
     try {
       await getAllTimeLines()
       setProgressMessage({ has: true, message: 'ツイートの読み込みが完了しました' })
+      setPercent(100)
       await createDownload.mutateAsync({ user_name: userName })
+      setPercent(0)
       const result = await fetch('/api/twitter', {
         method: 'POST',
         body: JSON.stringify(urls.map(url => url.url))
@@ -108,8 +119,10 @@ const Index = () => {
           if (media.type === 'video') {
             const video = media.video_info.variants.filter((item: any) => item.bitrate).sort((a: any, b: any) => b.bitrate - a.bitrate)[0]
             urls.push({ name: `${outputText}_${index + 1}`, url: video.url })
+            setUrlCount(urlCount + 1)
           } else if (media.type === 'photo') {
             urls.push({ name: `${outputText}_${index + 1}`, url: media.media_url_https })
+            setUrlCount(urlCount + 1)
           }
         })
       }
