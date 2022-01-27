@@ -6,7 +6,7 @@ export class useTwitter {
   constructor() {
     this.axios = createAxiosClient();
   }
-  async getUserTimeLine(payload: { userName: string; maxId: string }) {
+  async getUserTimeLine(payload: { userName: string; maxId: string | undefined }) {
     const { data } = await this.axios.get(
       "/api/proxy/1.1/statuses/user_timeline.json",
       {

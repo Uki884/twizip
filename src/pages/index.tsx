@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
 import styled from 'styled-components';
-import { Modal, Button, Icon, Input, Progress, Container } from 'semantic-ui-react'
+import { Button, Input, Message, Progress } from 'semantic-ui-react'
 import { useTwitter } from '../utils/twitter'
 import Long from 'long'
-import JSZipUtils from 'jszip-utils'
-import JSZip from 'jszip-immediate'
 import { saveAs } from 'file-saver';
+import { trpc } from 'src/utils/trpc';
 
 const _Container = styled.div`
   height: 100vh;
@@ -40,36 +39,53 @@ const _InputContainer = styled.div`
 const _Content = styled.div`
     width: 100%;
   `
-
 const Index = () => {
+  const createDownload = trpc.useMutation(['downloads.create'])
   const urls: { name: string; url: string }[] = []
   const twitter = new useTwitter()
   const [userName, setUserName] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
-  const [isZipping, setIsZipping] = useState(false)
+  const [progressMessage, setProgressMessage] = useState({ has: false, message: '' })
   const [percent, setPercent] = useState(0)
-  const [tweetProgressPercent, setTweetProgressPercent] = useState(50)
+  const [message, setMessage] = useState<{ has: boolean, text: string; type: 'green' | 'red' }>({ has: false, text: '', type: 'green' })
+
+  const handleDismiss = () => {
+    setMessage({ has: false, text: '', type: 'green' })
+    setProgressMessage({ has: false, message: '' })
+  }
 
   const handleSearchUser = async () => {
     if (!userName) {
       alert('ユーザー名を入力してください')
       return
     }
-    setIsLoading(true)
-    setPercent(0)
-    await getAllTimeLines()
-    setTweetProgressPercent(100)
-    const result = await fetch('/api/twitter', {
-      method: 'POST',
-      body: JSON.stringify(urls.map(url => url.url))
-    })
-    const blob = await result.blob()
-    setIsLoading(false)
-    saveAs(blob, `@${userName}.zip`);
+    setProgressMessage({ has: true, message: 'ツイートの読み込みを開始しました' })
+    try {
+      await getAllTimeLines()
+      setProgressMessage({ has: true, message: 'ツイートの読み込みが完了しました' })
+      await createDownload.mutateAsync({ user_name: userName })
+      const result = await fetch('/api/twitter', {
+        method: 'POST',
+        body: JSON.stringify(urls.map(url => url.url))
+      })
+      const blob = await result.blob()
+      setMessage({ has: true, text: 'ダウンロードが成功しました', type: 'green' })
+      setProgressMessage({ has: true, message: 'zip作成中...' })
+      saveAs(blob, `@${userName}.zip`);
+
+      setProgressMessage({ has: true, message: '完了しました' })
+      setMessage({ has: true, text: 'ダウンロードが成功しました', type: 'green' })
+
+      setTimeout(() => {
+        handleDismiss()
+      }, 3000)
+
+    } catch (e) {
+      setMessage({ has: true, text: 'タイムラインの取得に失敗しました', type: 'red' })
+      setProgressMessage({ has: false, message: '' })
+    }
   }
 
-  const getAllTimeLines = async (maxId: string = undefined) => {
+  const getAllTimeLines = async (maxId = undefined) => {
     const payload = {
       userName,
       maxId,
@@ -77,8 +93,10 @@ const Index = () => {
     let nextMaxId
     const result = await twitter.getUserTimeLine(payload)
     if (result.length === 0) {
+      setPercent(100)
       return
     }
+    setPercent(50)
     result.map((tweet: any) => {
       const searchUrl = 'https'
       const baseText = tweet.text.split(' ')[0]
@@ -102,23 +120,6 @@ const Index = () => {
     await getAllTimeLines(nextMaxId)
   }
 
-  const zipGenerateAsync = (zip: any) => {
-    return new Promise((resolve, reject) => {
-      zip.generateAsync({type: "blob"}).then(resolve);
-    });
-  };
-
-  const getBinaryContent = (url: string, zip: any) => {
-    return new JSZip.external.Promise((resolve: any, reject: any) => {
-      JSZipUtils.getBinaryContent(url, (err: any, data: any) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(data);
-      });
-    })
-  }
-
   return (
     <_Container>
       <_Index>
@@ -130,18 +131,19 @@ const Index = () => {
           <Button color="blue" onClick={handleSearchUser}>検索</Button>
         </_InputContainer>
         <_Content>
-          {isLoading &&
-            <div>
-              <Progress percent={tweetProgressPercent} progress />
-              ツイート読み込み中...
-            </div>}
-          {isDownloading &&
+          {
+            progressMessage.has &&
             <div>
             <Progress percent={percent} progress success />
-            ダウンロード中...
-            </div>}
-          { isZipping && <div>zip作成中...</div> }
+            { progressMessage.message }
+            </div>
+          }
         </_Content>
+        {
+          message.has && <Message color={message.type} onDismiss={handleDismiss}>
+            {message.text}
+          </Message>
+        }
       </_Index>
     </_Container>
   )
