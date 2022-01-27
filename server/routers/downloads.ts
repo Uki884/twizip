@@ -1,6 +1,6 @@
 import * as trpc from "@trpc/server";
 import { z } from "zod";
-import prisma from 'server/prisma';
+import prisma from 'server/lib/prisma';
 
 export const downloads = trpc.router()
   .mutation("create", {
